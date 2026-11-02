@@ -326,6 +326,7 @@ header.nav{position:sticky;z-index:100}
 .rv{opacity:0;transform:translateY(26px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.8,.2,1);transition-delay:var(--d,0s)}
 .rv.in{opacity:1;transform:none}
 .no-js .rv{opacity:1;transform:none}
+.hero .rv,.stats .rv{opacity:1;transform:none;transition:none}
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
   .w-bar i{width:100%}.rv{opacity:1;transform:none}
@@ -683,9 +684,9 @@ function wDraw(){wx.clearRect(0,0,innerWidth,innerHeight);wp.forEach(function(p)
 var welcome=$("#welcome"),entered=false,typeT;
 function startTyping(){var arr=T[lang].type,i=0,j=0,el=$("#typed");
   (function step(){if(entered)return;var s=arr[i];el.textContent=s.slice(0,++j);if(j<s.length)typeT=setTimeout(step,45);else if(i<arr.length-1){typeT=setTimeout(function(){i++;j=0;step()},650)}})()}
-function enter(){if(entered)return;entered=true;clearTimeout(typeT);welcome.classList.add("out");document.body.style.overflow="";cancelAnimationFrame(wRaf);
+function enter(){if(entered)return;entered=true;clearTimeout(typeT);welcome.classList.add("out");document.body.style.overflow="";cancelAnimationFrame(wRaf);revealCheck();pollReveal();
   try{sessionStorage.setItem("bd-seen","1")}catch(e){}
-  setTimeout(function(){welcome.style.display="none";revealCheck();countUp()},900)}
+  setTimeout(function(){welcome.style.display="none";revealCheck();countUp();setTimeout(revealCheck,250);setTimeout(revealCheck,900)},900)}
 var seen=false;try{seen=sessionStorage.getItem("bd-seen")==="1"}catch(e){}
 if(seen){entered=true;welcome.style.display="none"}
 else if(calm){entered=true;welcome.style.display="none"}
@@ -705,8 +706,11 @@ secs.forEach(function(s){spy.observe(s)});
 /* ---------- reveal + counters ---------- */
 var rvs=$$(".rv");
 var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting&&entered){e.target.classList.add("in");io.unobserve(e.target)}})},{threshold:.12});
-function revealCheck(){rvs.forEach(function(n){if(!n.classList.contains("in"))io.observe(n)})}
-revealCheck();
+var rvTimer;function pollReveal(){var n=0;clearInterval(rvTimer);rvTimer=setInterval(function(){revealCheck();if(++n>20)clearInterval(rvTimer)},300)}
+function revealCheck(){if(!entered)return;rvs.forEach(function(n){if(n.classList.contains("in"))return;var r=n.getBoundingClientRect();
+  if(r.top<innerHeight*.92&&r.bottom>0){n.classList.add("in");io.unobserve(n)}else{io.unobserve(n);io.observe(n)}})}
+revealCheck();if(entered)pollReveal();
+addEventListener("scroll",revealCheck,{passive:true});addEventListener("resize",revealCheck);addEventListener("touchmove",revealCheck,{passive:true});addEventListener("load",revealCheck);
 var counted=false;
 function countUp(){if(counted||!entered)return;var els=$$("[data-count]");var st=$(".stats");var r=st.getBoundingClientRect();if(r.top>innerHeight)return;counted=true;
   els.forEach(function(el){var to=+el.getAttribute("data-count"),suf=el.getAttribute("data-suf")||"",t0=performance.now();
